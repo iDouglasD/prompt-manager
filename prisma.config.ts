@@ -1,8 +1,7 @@
+import "dotenv/config"
+import { defineConfig } from "prisma/config"
 
-import "dotenv/config";
-import { defineConfig } from "prisma/config";
-
-const url = process.env.DATABASE_URL!;
+const url = process.env.DATABASE_URL as string
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -13,4 +12,4 @@ export default defineConfig({
   datasource: {
     url,
   },
-});
+})
