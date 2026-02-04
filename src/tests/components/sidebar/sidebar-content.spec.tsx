@@ -1,23 +1,59 @@
 import { userEvent } from "@testing-library/user-event"
-import { SidebarContent } from "@/components/sidebar/sidebar-content"
+import {
+  SidebarContent,
+  type SidebarContentProps,
+} from "@/components/sidebar/sidebar-content"
 import { render, screen } from "@/lib/test-utils"
 
+const pushMock = jest.fn()
+let mockSearchParams = new URLSearchParams()
+
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn() }),
+  useRouter: () => ({ push: pushMock }),
+  useSearchParams: () => mockSearchParams,
 }))
 
-const makeSut = () => {
-  return render(<SidebarContent />)
+const initialPrompts = [
+  {
+    id: "1",
+    title: "First Prompt",
+    content: "This is the first prompt content.",
+  },
+]
+
+const makeSut = (
+  { prompts = initialPrompts }: SidebarContentProps = {} as SidebarContentProps,
+) => {
+  return render(<SidebarContent prompts={prompts} />)
 }
 
 describe("SidebarContent", () => {
   const user = userEvent.setup()
 
-  it("should render correctly button to create a new prompt", () => {
-    makeSut()
+  describe("base", () => {
+    it("should render correctly button to create a new prompt", () => {
+      makeSut()
 
-    expect(screen.getByRole("complementary")).toBeVisible()
-    expect(screen.getByRole("button", { name: /new prompt/i })).toBeVisible()
+      expect(screen.getByRole("complementary")).toBeVisible()
+      expect(screen.getByRole("button", { name: /new prompt/i })).toBeVisible()
+    })
+
+    it("should render correctly prompts list", () => {
+      makeSut()
+
+      expect(screen.getByText(initialPrompts[0].title)).toBeInTheDocument()
+    })
+
+    it("should update search input value when user types", async () => {
+      makeSut()
+
+      const text = "AI"
+      const searchInput = screen.getByPlaceholderText(/search prompts.../i)
+
+      await user.type(searchInput, text)
+
+      expect(searchInput).toHaveValue(text)
+    })
   })
 
   describe("when sidebar is collapsed and expand button is clicked", () => {
@@ -52,8 +88,50 @@ describe("SidebarContent", () => {
         name: /expand sidebar/i,
       })
       expect(expandButton).toBeInTheDocument()
-
       expect(collapseButton).not.toBeInTheDocument()
     })
+  })
+
+  describe("when new prompt button is clicked", () => {
+    it("should call the router push method", async () => {
+      makeSut()
+
+      const newPromptButton = screen.getByRole("button", {
+        name: /new prompt/i,
+      })
+
+      await user.click(newPromptButton)
+
+      expect(pushMock).toHaveBeenCalledWith("/new")
+    })
+  })
+
+  describe("Search", () => {
+    it.only("should navigate with URL query param when user types in search input", async () => {
+      const text = "AI prompt"
+      makeSut()
+      const searchInput = screen.getByPlaceholderText(/search prompts.../i)
+
+      await user.type(searchInput, text)
+
+      expect(pushMock).toHaveBeenCalled()
+      const lastCall = pushMock.mock.calls.at(-1)
+      expect(lastCall?.[0]).toBe(`/?q=${encodeURIComponent(text)}`)
+
+      await user.clear(searchInput)
+      const lastClearCall = pushMock.mock.calls.at(-1)
+      expect(lastClearCall?.[0]).toBe("/")
+    })
+  })
+
+  it("should initialize the search input with query param value", () => {
+    const text = "initial query"
+    const searchParam = new URLSearchParams({ q: text })
+    mockSearchParams = searchParam
+    makeSut()
+
+    const searchInput = screen.getByPlaceholderText(/search prompts.../i)
+
+    expect(searchInput).toHaveValue(text)
   })
 })
