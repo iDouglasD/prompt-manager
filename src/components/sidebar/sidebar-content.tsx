@@ -1,10 +1,10 @@
 "use client"
 
 import {
+  PlusIcon as AddIcon,
   ArrowLeftToLineIcon,
   ArrowRightToLineIcon,
-  PlusIcon,
-  XIcon,
+  XIcon as CloseIcon,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -56,7 +56,7 @@ export function SidebarContent() {
                 aria-label="Collapse sidebar"
                 title="Collapse sidebar"
               >
-                <XIcon className="w-5 h-5 text-gray-100" />
+                <CloseIcon className="w-5 h-5 text-gray-100" />
               </Button>
             </div>
           </div>
@@ -77,11 +77,11 @@ export function SidebarContent() {
               onClick={handleNewPrompt}
               className="w-full"
               size="lg"
-              aria-label="Create new prompt"
-              title="Create new prompt"
+              aria-label="New prompt"
+              title="New prompt"
             >
-              <PlusIcon className="w-5 h-5 mr-2" />
-              New Prompt
+              <AddIcon className="w-5 h-5 mr-2" />
+              New prompt
             </Button>
           </div>
         </section>
