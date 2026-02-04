@@ -53,8 +53,8 @@ export function SidebarContent() {
             <div className="flex items-center justify-between">
               <Button
                 variant="secondary"
-                aria-label="Collapse sidebar"
-                title="Collapse sidebar"
+                aria-label="Close menu"
+                title="Close menu"
               >
                 <CloseIcon className="w-5 h-5 text-gray-100" />
               </Button>
@@ -64,9 +64,11 @@ export function SidebarContent() {
             <header className="flex w-full items-center justify-between">
               <Logo />
               <Button
-                onClick={collapsedSidebar}
-                variant="icon"
                 className="hidden md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
+                variant="icon"
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                onClick={collapsedSidebar}
               >
                 <ArrowLeftToLineIcon className="w-5 h-5 text-gray-100" />
               </Button>
