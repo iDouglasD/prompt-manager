@@ -6,13 +6,29 @@ import {
   ArrowRightToLineIcon,
   XIcon as CloseIcon,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { startTransition, useState } from "react"
 import { Logo } from "../logo"
 import { Button } from "../ui/button"
+import { Input } from "../ui/input"
 
-export function SidebarContent() {
+type Prompt = {
+  id: string
+  title: string
+  content: string
+}
+
+export type SidebarContentProps = {
+  prompts: Prompt[]
+}
+
+export function SidebarContent({ prompts }: SidebarContentProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const initialQuery = searchParams.get("q") ?? ""
+
+  const [query, setQuery] = useState(initialQuery)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   function collapsedSidebar() {
@@ -24,6 +40,16 @@ export function SidebarContent() {
 
   function handleNewPrompt() {
     router.push("/new")
+  }
+
+  function handleQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const newQuery = event.target.value
+    setQuery(newQuery)
+
+    startTransition(() => {
+      const url = newQuery ? `/?q=${encodeURIComponent(newQuery)}` : "/"
+      router.push(url, { scroll: false })
+    })
   }
 
   return (
@@ -68,12 +94,25 @@ export function SidebarContent() {
                 variant="icon"
                 aria-label="Collapse sidebar"
                 title="Collapse sidebar"
+                value={query}
                 onClick={collapsedSidebar}
               >
                 <ArrowLeftToLineIcon className="w-5 h-5 text-gray-100" />
               </Button>
             </header>
           </div>
+          <section className="mb-5">
+            <form action="">
+              <Input
+                name="q"
+                type="text"
+                value={query}
+                placeholder="Search prompts..."
+                onChange={handleQueryChange}
+                autoFocus
+              />
+            </form>
+          </section>
           <div>
             <Button
               onClick={handleNewPrompt}
@@ -88,6 +127,9 @@ export function SidebarContent() {
           </div>
         </section>
       )}
+      {prompts.map((prompt) => (
+        <p key={prompt.id}>{prompt.title}</p>
+      ))}
     </aside>
   )
 }
