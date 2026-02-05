@@ -1,6 +1,8 @@
 "use server"
 
+import { SearchPromptsUseCase } from "@/core/application/prompts/search-prompts.use-case"
 import type { PromptSummary } from "@/core/domain/prompts/prompt.entity"
+import { PrismaPromptRepository } from "@/infra/repository/prisma-prompt.repository"
 import { prisma } from "@/lib/prisma"
 
 type SearchFormState = {
@@ -15,20 +17,13 @@ export async function searchPromptAction(
 ): Promise<SearchFormState> {
   const term = String(formData.get("q") ?? "").trim()
 
-  try {
-    const prompts = await prisma.prompt.findMany({
-      where: term
-        ? {
-            OR: [
-              { title: { contains: term, mode: "insensitive" } },
-              { content: { contains: term, mode: "insensitive" } },
-            ],
-          }
-        : undefined,
-      orderBy: { createdAt: "desc" },
-    })
+  const repository = new PrismaPromptRepository(prisma)
+  const useCase = new SearchPromptsUseCase(repository)
 
-    const summaries = prompts.map(({ id, title, content }) => ({
+  try {
+    const results = await useCase.execute(term)
+
+    const summaries = results.map(({ id, title, content }) => ({
       id,
       title,
       content,
