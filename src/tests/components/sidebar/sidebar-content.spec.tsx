@@ -56,7 +56,7 @@ describe("SidebarContent", () => {
     })
   })
 
-  describe("when sidebar is collapsed and expand button is clicked", () => {
+  describe("when sidebar is collapsed and expand", () => {
     it("should render correctly the sidebar expanded and button to collapse sidebar", () => {
       makeSut()
 
@@ -90,6 +90,32 @@ describe("SidebarContent", () => {
       expect(expandButton).toBeInTheDocument()
       expect(collapseButton).not.toBeInTheDocument()
     })
+
+    it("should render create new prompt button when sidebar is collapsed", async () => {
+      makeSut()
+      const collapseButton = screen.getByRole("button", {
+        name: /collapse sidebar/i,
+      })
+
+      await user.click(collapseButton)
+
+      const newPromptButton = screen.getByRole("button", {
+        name: /new prompt/i,
+      })
+      expect(newPromptButton).toBeVisible()
+    })
+
+    it("should not render prompts list when sidebar is collapsed", async () => {
+      makeSut()
+      const collapseButton = screen.getByRole("button", {
+        name: /collapse sidebar/i,
+      })
+
+      await user.click(collapseButton)
+
+      const nav = screen.queryByRole("navigation", { name: /prompt list/i })
+      expect(nav).not.toBeInTheDocument()
+    })
   })
 
   describe("when new prompt button is clicked", () => {
@@ -122,16 +148,16 @@ describe("SidebarContent", () => {
       const lastClearCall = pushMock.mock.calls.at(-1)
       expect(lastClearCall?.[0]).toBe("/")
     })
-  })
 
-  it("should initialize the search input with query param value", () => {
-    const text = "initial query"
-    const searchParam = new URLSearchParams({ q: text })
-    mockSearchParams = searchParam
-    makeSut()
+    it("should initialize the search input with query param value", () => {
+      const text = "initial query"
+      const searchParam = new URLSearchParams({ q: text })
+      mockSearchParams = searchParam
+      makeSut()
 
-    const searchInput = screen.getByPlaceholderText(/search prompts.../i)
+      const searchInput = screen.getByPlaceholderText(/search prompts.../i)
 
-    expect(searchInput).toHaveValue(text)
+      expect(searchInput).toHaveValue(text)
+    })
   })
 })

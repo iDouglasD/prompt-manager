@@ -8,18 +8,14 @@ import {
 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { startTransition, useState } from "react"
+import type { PromptSummary } from "@/core/domain/prompts/prompt.entity"
 import { Logo } from "../logo"
+import { PromptList } from "../prompts"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 
-type Prompt = {
-  id: string
-  title: string
-  content: string
-}
-
 export type SidebarContentProps = {
-  prompts: Prompt[]
+  prompts: PromptSummary[]
 }
 
 export function SidebarContent({ prompts }: SidebarContentProps) {
@@ -70,66 +66,80 @@ export function SidebarContent({ prompts }: SidebarContentProps) {
               <ArrowRightToLineIcon className="w-5 h-5 text-gray-100" />
             </Button>
           </header>
-        </section>
-      )}
-
-      {!isCollapsed && (
-        <section className="p-6">
-          <div className="md:hidden mb-4">
-            <div className="flex items-center justify-between">
-              <Button
-                variant="secondary"
-                aria-label="Close menu"
-                title="Close menu"
-              >
-                <CloseIcon className="w-5 h-5 text-gray-100" />
-              </Button>
-            </div>
-          </div>
-          <div className="flex w-full items-center justify-between mb-6">
-            <header className="flex w-full items-center justify-between">
-              <Logo />
-              <Button
-                className="hidden md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
-                variant="icon"
-                aria-label="Collapse sidebar"
-                title="Collapse sidebar"
-                value={query}
-                onClick={collapsedSidebar}
-              >
-                <ArrowLeftToLineIcon className="w-5 h-5 text-gray-100" />
-              </Button>
-            </header>
-          </div>
-          <section className="mb-5">
-            <form action="">
-              <Input
-                name="q"
-                type="text"
-                value={query}
-                placeholder="Search prompts..."
-                onChange={handleQueryChange}
-                autoFocus
-              />
-            </form>
-          </section>
-          <div>
+          <div className="felx flex-col items-center space-y-4">
             <Button
               onClick={handleNewPrompt}
-              className="w-full"
-              size="lg"
               aria-label="New prompt"
               title="New prompt"
             >
-              <AddIcon className="w-5 h-5 mr-2" />
-              New prompt
+              <AddIcon className="w-5 h-5 text-white" />
             </Button>
           </div>
         </section>
       )}
-      {prompts.map((prompt) => (
-        <p key={prompt.id}>{prompt.title}</p>
-      ))}
+
+      {!isCollapsed && (
+        <>
+          <section className="p-6">
+            <div className="md:hidden mb-4">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="secondary"
+                  aria-label="Close menu"
+                  title="Close menu"
+                >
+                  <CloseIcon className="w-5 h-5 text-gray-100" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex w-full items-center justify-between mb-6">
+              <header className="flex w-full items-center justify-between">
+                <Logo />
+                <Button
+                  className="hidden md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
+                  variant="icon"
+                  aria-label="Collapse sidebar"
+                  title="Collapse sidebar"
+                  value={query}
+                  onClick={collapsedSidebar}
+                >
+                  <ArrowLeftToLineIcon className="w-5 h-5 text-gray-100" />
+                </Button>
+              </header>
+            </div>
+            <section className="mb-5">
+              <form action="">
+                <Input
+                  name="q"
+                  type="text"
+                  value={query}
+                  placeholder="Search prompts..."
+                  onChange={handleQueryChange}
+                  autoFocus
+                />
+              </form>
+            </section>
+            <div>
+              <Button
+                onClick={handleNewPrompt}
+                className="w-full"
+                size="lg"
+                aria-label="New prompt"
+                title="New prompt"
+              >
+                <AddIcon className="w-5 h-5 mr-2" />
+                New prompt
+              </Button>
+            </div>
+          </section>
+          <nav
+            className="flex-1 overflow-auto px-6 pb-6"
+            aria-label="Prompt list"
+          >
+            <PromptList prompts={prompts} />
+          </nav>
+        </>
+      )}
     </aside>
   )
 }
