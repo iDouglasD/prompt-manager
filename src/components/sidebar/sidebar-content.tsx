@@ -7,12 +7,14 @@ import {
   XIcon as CloseIcon,
 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { startTransition, useState } from "react"
+import { startTransition, useActionState, useRef, useState } from "react"
+import { searchPromptAction } from "@/app/actions/prompt.actions"
 import type { PromptSummary } from "@/core/domain/prompts/prompt.entity"
 import { Logo } from "../logo"
 import { PromptList } from "../prompts"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
+import { Spinner } from "../ui/spinner"
 
 export type SidebarContentProps = {
   prompts: PromptSummary[]
@@ -22,10 +24,22 @@ export function SidebarContent({ prompts }: SidebarContentProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const initialQuery = searchParams.get("q") ?? ""
+  const formRef = useRef<HTMLFormElement | null>(null)
 
-  const [query, setQuery] = useState(initialQuery)
+  const [searchState, searchAction, isPending] = useActionState(
+    searchPromptAction,
+    {
+      success: true,
+      prompts,
+    },
+  )
+
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [query, setQuery] = useState(searchParams.get("q") ?? "")
+
+  const hasQuery = query.trim().length > 0
+  const promptsList =
+    hasQuery && searchState.prompts ? searchState.prompts : prompts
 
   function collapsedSidebar() {
     setIsCollapsed(true)
@@ -45,6 +59,7 @@ export function SidebarContent({ prompts }: SidebarContentProps) {
     startTransition(() => {
       const url = newQuery ? `/?q=${encodeURIComponent(newQuery)}` : "/"
       router.push(url, { scroll: false })
+      formRef.current?.requestSubmit()
     })
   }
 
@@ -108,7 +123,11 @@ export function SidebarContent({ prompts }: SidebarContentProps) {
               </header>
             </div>
             <section className="mb-5">
-              <form action="">
+              <form
+                className="relative group w-full"
+                ref={formRef}
+                action={searchAction}
+              >
                 <Input
                   name="q"
                   type="text"
@@ -117,6 +136,14 @@ export function SidebarContent({ prompts }: SidebarContentProps) {
                   onChange={handleQueryChange}
                   autoFocus
                 />
+                {isPending && (
+                  <div
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2"
+                    title="Searching..."
+                  >
+                    <Spinner />
+                  </div>
+                )}
               </form>
             </section>
             <div>
@@ -136,7 +163,7 @@ export function SidebarContent({ prompts }: SidebarContentProps) {
             className="flex-1 overflow-auto px-6 pb-6"
             aria-label="Prompt list"
           >
-            <PromptList prompts={prompts} />
+            <PromptList prompts={promptsList} />
           </nav>
         </>
       )}
