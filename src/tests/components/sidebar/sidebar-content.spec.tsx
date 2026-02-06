@@ -5,7 +5,6 @@ import {
 } from "@/components/sidebar/sidebar-content"
 import { render, screen } from "@/lib/test-utils"
 
-jest.mock("@/lib/prisma", () => ({ prisma: {} }))
 const pushMock = jest.fn()
 let mockSearchParams = new URLSearchParams()
 
