@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 
 import "@/styles/globals.css"
+import { Sidebar } from "@/components/sidebar"
 
 const inter = Inter({
   variable: "--font-sans",
@@ -21,8 +22,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased bg-gray-900 text-white`}>
-        {children}
+      <body
+        className={`${inter.variable} antialiased bg-gray-900 text-white flex h-screen`}
+      >
+        <Sidebar />
+        <main className="relative flex-1 overflow-auto min-w-0">
+          <div className="p-4 sm:p-6 md:p-8 max-w-full md:max-w-3xl mx-auto h-full">
+            {children}
+          </div>
+        </main>
       </body>
     </html>
   )

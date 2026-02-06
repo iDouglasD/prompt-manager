@@ -1,0 +1,183 @@
+"use client"
+
+import {
+  PlusIcon as AddIcon,
+  ArrowLeftToLineIcon,
+  ArrowRightToLineIcon,
+  XIcon as CloseIcon,
+} from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
+import { searchPromptAction } from "@/app/actions/prompt.actions"
+import type { PromptSummary } from "@/core/domain/prompts/prompt.entity"
+import { Logo } from "../logo"
+import { PromptList } from "../prompts"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
+import { Spinner } from "../ui/spinner"
+
+export type SidebarContentProps = {
+  prompts: PromptSummary[]
+}
+
+export function SidebarContent({ prompts }: SidebarContentProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const formRef = useRef<HTMLFormElement | null>(null)
+
+  const [searchState, searchAction, isPending] = useActionState(
+    searchPromptAction,
+    {
+      success: true,
+      prompts,
+    },
+  )
+
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [query, setQuery] = useState(searchParams.get("q") ?? "")
+
+  const hasQuery = query.trim().length > 0
+  const promptsList =
+    hasQuery && searchState.prompts ? searchState.prompts : prompts
+
+  function collapsedSidebar() {
+    setIsCollapsed(true)
+  }
+  function expandSidebar() {
+    setIsCollapsed(false)
+  }
+
+  function handleNewPrompt() {
+    router.push("/new")
+  }
+
+  function handleQueryChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const newQuery = event.target.value
+    setQuery(newQuery)
+
+    startTransition(() => {
+      const url = newQuery ? `/?q=${encodeURIComponent(newQuery)}` : "/"
+      router.push(url, { scroll: false })
+      formRef.current?.requestSubmit()
+    })
+  }
+
+  useEffect(() => {
+    if (!hasQuery) return
+    formRef.current?.requestSubmit()
+  }, [hasQuery])
+
+  return (
+    <aside
+      className="border-r border-gray-700 flex flex-col h-full bg-gray-800 transition-[transform,width] duration-300 ease-in-out fixed md:relative left-0 top-0 z-50 md:z-auto w-[80vw] sm:w-[320px] data-[collapsed=true]:md:w-16 data-[collapsed=false]:md:w-[24rem]"
+      data-collapsed={isCollapsed}
+    >
+      {isCollapsed && (
+        <section className="px-2 py-6">
+          <header className="flex items-center justify-center mb-6">
+            <Button
+              onClick={expandSidebar}
+              variant="icon"
+              className="hidden md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+            >
+              <ArrowRightToLineIcon className="w-5 h-5 text-gray-100" />
+            </Button>
+          </header>
+          <div className="felx flex-col items-center space-y-4">
+            <Button
+              onClick={handleNewPrompt}
+              aria-label="New prompt"
+              title="New prompt"
+            >
+              <AddIcon className="w-5 h-5 text-white" />
+            </Button>
+          </div>
+        </section>
+      )}
+
+      {!isCollapsed && (
+        <>
+          <section className="p-6">
+            <div className="md:hidden mb-4">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="secondary"
+                  aria-label="Close menu"
+                  title="Close menu"
+                >
+                  <CloseIcon className="w-5 h-5 text-gray-100" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex w-full items-center justify-between mb-6">
+              <header className="flex w-full items-center justify-between">
+                <Logo />
+                <Button
+                  className="hidden md:inline-flex p-2 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-accent-500 rounded-lg transition-colors"
+                  variant="icon"
+                  aria-label="Collapse sidebar"
+                  title="Collapse sidebar"
+                  value={query}
+                  onClick={collapsedSidebar}
+                >
+                  <ArrowLeftToLineIcon className="w-5 h-5 text-gray-100" />
+                </Button>
+              </header>
+            </div>
+            <section className="mb-5">
+              <form
+                className="relative group w-full"
+                ref={formRef}
+                action={searchAction}
+              >
+                <Input
+                  name="q"
+                  type="text"
+                  value={query}
+                  placeholder="Search prompts..."
+                  onChange={handleQueryChange}
+                  autoFocus
+                />
+                {isPending && (
+                  <div
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2"
+                    title="Searching..."
+                  >
+                    <Spinner />
+                  </div>
+                )}
+              </form>
+            </section>
+            <div>
+              <Button
+                onClick={handleNewPrompt}
+                className="w-full"
+                size="lg"
+                aria-label="New prompt"
+                title="New prompt"
+              >
+                <AddIcon className="w-5 h-5 mr-2" />
+                New prompt
+              </Button>
+            </div>
+          </section>
+          <nav
+            className="flex-1 overflow-auto px-6 pb-6 scrollbar scrollbar-thumb-gray-200 scrollbar-track-transparent"
+            aria-label="Prompt list"
+          >
+            <PromptList prompts={promptsList} />
+          </nav>
+        </>
+      )}
+    </aside>
+  )
+}
