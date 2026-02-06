@@ -74,6 +74,27 @@ describe("SidebarContent", () => {
       expect(expandButton).not.toBeInTheDocument()
     })
 
+    it('should expand when user clicks on "expand sidebar" button', async () => {
+      makeSut()
+
+      const collapseButton = screen.getByRole("button", {
+        name: /collapse sidebar/i,
+      })
+      await user.click(collapseButton)
+
+      const expandButton = screen.getByRole("button", {
+        name: /expand sidebar/i,
+      })
+      await user.click(expandButton)
+
+      expect(
+        screen.getByRole("button", { name: /collapse sidebar/i }),
+      ).toBeVisible()
+      expect(
+        screen.getByRole("navigation", { name: /prompt list/i }),
+      ).toBeVisible()
+    })
+
     it("should render correctly the sidebar collapsed and button to expand sidebar", async () => {
       makeSut()
 
@@ -133,7 +154,7 @@ describe("SidebarContent", () => {
   })
 
   describe("Search", () => {
-    it.only("should navigate with URL query param when user types in search input", async () => {
+    it("should navigate with URL query param when user types in search input", async () => {
       const text = "AI prompt"
       makeSut()
       const searchInput = screen.getByPlaceholderText(/search prompts.../i)
@@ -147,6 +168,32 @@ describe("SidebarContent", () => {
       await user.clear(searchInput)
       const lastClearCall = pushMock.mock.calls.at(-1)
       expect(lastClearCall?.[0]).toBe("/")
+    })
+
+    it("should submit the form when user types in search input", async () => {
+      const submitSpy = jest
+        .spyOn(HTMLFormElement.prototype, "requestSubmit")
+        .mockImplementation(() => undefined)
+      makeSut()
+
+      const searchInput = screen.getByPlaceholderText(/search prompts.../i)
+
+      await user.type(searchInput, "test submit")
+      expect(submitSpy).toHaveBeenCalled()
+      submitSpy.mockRestore()
+    })
+
+    it("should submit the form automatically on mount when there is a query param", async () => {
+      const submitSpy = jest
+        .spyOn(HTMLFormElement.prototype, "requestSubmit")
+        .mockImplementation(() => undefined)
+      const text = "initial query"
+      const searchParams = new URLSearchParams({ q: text })
+      mockSearchParams = searchParams
+      makeSut()
+
+      expect(submitSpy).toHaveBeenCalled()
+      submitSpy.mockRestore()
     })
 
     it("should initialize the search input with query param value", () => {

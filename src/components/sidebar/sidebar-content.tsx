@@ -7,7 +7,13 @@ import {
   XIcon as CloseIcon,
 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { startTransition, useActionState, useRef, useState } from "react"
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import { searchPromptAction } from "@/app/actions/prompt.actions"
 import type { PromptSummary } from "@/core/domain/prompts/prompt.entity"
 import { Logo } from "../logo"
@@ -62,6 +68,11 @@ export function SidebarContent({ prompts }: SidebarContentProps) {
       formRef.current?.requestSubmit()
     })
   }
+
+  useEffect(() => {
+    if (!hasQuery) return
+    formRef.current?.requestSubmit()
+  }, [hasQuery])
 
   return (
     <aside
@@ -160,7 +171,7 @@ export function SidebarContent({ prompts }: SidebarContentProps) {
             </div>
           </section>
           <nav
-            className="flex-1 overflow-auto px-6 pb-6"
+            className="flex-1 overflow-auto px-6 pb-6 scrollbar scrollbar-thumb-gray-200 scrollbar-track-transparent"
             aria-label="Prompt list"
           >
             <PromptList prompts={promptsList} />
