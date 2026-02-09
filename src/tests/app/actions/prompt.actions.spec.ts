@@ -1,8 +1,12 @@
-import { searchPromptAction } from "@/app/actions/prompt.actions"
+import {
+  createPromptAction,
+  searchPromptAction,
+} from "@/app/actions/prompt.actions"
 
 jest.mock("@/lib/prisma", () => ({ prisma: {} }))
 
 const mockedSearchExecute = jest.fn()
+const mockedCreateExecute = jest.fn()
 
 jest.mock("@/core/application/prompts/search-prompts.use-case", () => ({
   SearchPromptsUseCase: jest
@@ -10,9 +14,59 @@ jest.mock("@/core/application/prompts/search-prompts.use-case", () => ({
     .mockImplementation(() => ({ execute: mockedSearchExecute })),
 }))
 
+jest.mock("@/core/application/prompts/create-prompt.use-case", () => ({
+  CreatePromptUseCase: jest
+    .fn()
+    .mockImplementation(() => ({ execute: mockedCreateExecute })),
+}))
+
 describe("Server actions: Prompts", () => {
   beforeEach(() => {
     mockedSearchExecute.mockReset()
+  })
+
+  describe("createPromptAction", () => {
+    it("should create a prompt successfully", async () => {
+      mockedCreateExecute.mockResolvedValue(undefined)
+
+      const data = {
+        title: "New Prompt",
+        content: "This is a new prompt.",
+      }
+      const result = await createPromptAction(data)
+
+      expect(result).toEqual({
+        success: true,
+        message: "Prompt created successfully.",
+      })
+    })
+
+    it("should return validation errors for empty form data", async () => {
+      const data = {
+        title: "",
+        content: "",
+      }
+
+      const result = await createPromptAction(data)
+
+      expect(result?.success).toBe(false)
+      expect(result?.message).toBe("Invalid form data.")
+      expect(result?.errors).toBeDefined()
+    })
+
+    it("should return error message when PROMPT_ALREADY_EXISTS happen", async () => {
+      mockedCreateExecute.mockRejectedValue(new Error("PROMPT_ALREADY_EXISTS"))
+
+      const data = {
+        title: "Existing Prompt",
+        content: "This prompt already exists.",
+      }
+
+      const result = await createPromptAction(data)
+
+      expect(result?.success).toBe(false)
+      expect(result?.message).toBe("A prompt with this title already exists.")
+    })
   })
 
   describe("searchPromptAction", () => {
