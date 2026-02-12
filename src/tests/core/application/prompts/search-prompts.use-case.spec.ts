@@ -20,7 +20,7 @@ describe("SearchPromptsUseCase", () => {
     },
   ]
 
-  const repository: PromptRepository = {
+  const repository = {
     findMany: async () => input,
     searchMany: async (term: string) => {
       term = term.toLocaleLowerCase()
@@ -30,7 +30,7 @@ describe("SearchPromptsUseCase", () => {
           prompt.content.toLocaleLowerCase().includes(term),
       )
     },
-  }
+  } as PromptRepository
 
   it("should return all prompts when no search term is provided", async () => {
     const useCase = new SearchPromptsUseCase(repository)
